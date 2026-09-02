@@ -1,0 +1,6 @@
+[tool.ruff.lint]
+select = ["B", "BLE", "E", "F", "S", "UP", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"main.py" = ["BLE001", "S110"]
+"tests/**/*.py" = ["S101"]

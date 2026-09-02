@@ -1,24 +1,24 @@
 # PWM出力
 
-文書バージョン: v0.2.0（初期実装版）
+文書バージョン: v1.0.0（正式初版）
 
-> 製品用ファームウェアと実機なし自動テストを実装済みです。実機あり試験は未実施です。
+> Raspberry Pi Picoで基本動作を実機確認済みです。製品用ファームウェアと実機なし自動テストを実装しています。
 
 ## 利用者向け
 
 ### 概要
 
-Raspberry Pi Pico Wの電源投入時に4極ディップスイッチの設定を読み取り、設定値を内蔵LEDの点滅回数で通知した後、GP0から50 HzのPWMを出力する装置です。
+Raspberry Pi Picoの電源投入時に内蔵LED、4極ディップスイッチおよびPWM出力を初期化します。初期化成功後、内蔵LEDを0.5秒点灯して消灯し、1秒待機します。その後にディップスイッチの設定を読み取り、設定値を内蔵LEDの点滅回数で通知します。通知完了後に1秒待機してから、GP0から50 HzのPWMを出力します。PWM出力中は内蔵LEDを点灯し、停止時はPWM出力を0%にして内蔵LEDを消灯します。
 
 設定値0～10はデューティ比0～100%へ10%刻みで対応します。設定値11～15は異常値として扱い、値と同じ回数のLED通知後、出力を0%に固定します。
 
 ### 必要環境
 
-- Raspberry Pi Pico W
+- Raspberry Pi Pico
 - 4極ディップスイッチ
-- Pico Wへ給電できるUSB電源
+- Raspberry Pi Picoへ給電できるUSB電源
 - GP0の3.3 V系PWM信号を測定できるオシロスコープ等の計測機器
-- Pico W対応MicroPythonファームウェアと本プロジェクトのファームウェア
+- Raspberry Pi Pico対応MicroPythonファームウェアと本プロジェクトのファームウェア
 
 本装置は屋内用の試作品です。電池、充電回路、追加保護回路およびモータ等の負荷は使用しません。最大連続運転時間は24時間です。
 
@@ -52,10 +52,12 @@ Raspberry Pi Pico Wの電源投入時に4極ディップスイッチの設定を
 
 1. 電源を切った状態でディップスイッチを目的の設定値に合わせます。
 2. GP0の接続先とGNDを正しく接続します。
-3. Pico Wへ電源を投入します。
-4. 内蔵LEDの点滅回数が設定値と一致することを確認します。点灯0.25秒と消灯0.25秒で1周期です。
-5. LED通知完了後、GP0から選択したデューティ比の50 Hz PWMが出力されます。
-6. 設定を変更する場合は、電源を切ってスイッチを変更し、再度電源を投入します。
+3. Raspberry Pi Picoへ電源を投入します。
+4. 内蔵LEDが0.5秒点灯して消灯し、1秒待機することを確認します。
+5. 内蔵LEDの点滅回数が設定値と一致することを確認します。点灯0.25秒と消灯0.25秒で1周期です。
+6. LED通知完了後に1秒待機します。その後、内蔵LEDが点灯し、GP0から選択したデューティ比の50 Hz PWMが継続して出力されます。PWM出力中はREPLへ戻りません。
+7. 停止するときは`Ctrl+C`を入力します。PWM出力は0%になり、内蔵LEDは消灯します。
+7. 設定を変更する場合は、電源を切ってスイッチを変更し、再度電源を投入します。
 
 ### 注意事項
 
@@ -65,13 +67,13 @@ Raspberry Pi Pico Wの電源投入時に4極ディップスイッチの設定を
 - USBから給電し、屋内の管理された試作環境で使用してください。
 - 試作品のため、過電圧、過電流および逆接に対する追加保護回路はありません。
 - 連続運転は24時間以内としてください。
-- 100%設定では信号が常時Highとなるため、接続先が想定する「PWM 100%」の電気的意味を確認してください。
+- 100%設定ではPWMを使用せず、GP0を約3.3 Vの固定High出力にします。接続先が想定する「PWM 100%」の電気的意味を確認してください。
 
 ## 開発者向け
 
 ### 開発概要
 
-MicroPythonでPico Wの起動処理、ディップスイッチ読取り、LED通知、PWM設定を実装しています。要求、設計、インターフェース、テストは次の文書で管理します。
+MicroPythonでRaspberry Pi Picoの起動処理、ディップスイッチ読取り、LED通知、PWM設定を実装しています。要求、設計、インターフェース、テストは次の文書で管理します。
 
 - [仕様書](docs/Specification.md)
 - [設計書](docs/Design.md)
@@ -82,8 +84,8 @@ MicroPythonでPico Wの起動処理、ディップスイッチ読取り、LED通
 
 ### 開発環境
 
-- Raspberry Pi Pico W
-- Pico W対応MicroPython。版は固定しない。
+- Raspberry Pi Pico
+- Raspberry Pi Pico対応MicroPython。版は固定しない。
 - Python 3と`mpremote`
 - VS CodeとMicroPico拡張、または同等のファイル転送・REPL環境
 - 実機なしテスト用のpytest
@@ -93,8 +95,8 @@ MicroPythonでPico Wの起動処理、ディップスイッチ読取り、LED通
 
 ### セットアップ
 
-1. Pico WのBOOTSELボタンを押しながらUSB接続します。
-2. Pico W対応MicroPython UF2をUSBマスストレージへ書き込みます。
+1. Raspberry Pi PicoのBOOTSELボタンを押しながらUSB接続します。
+2. Raspberry Pi Pico対応MicroPython UF2をUSBマスストレージへ書き込みます。
 3. 再接続後、REPLへ接続できることを確認します。
 4. ホスト側に仮想環境を作り、依存関係を導入します。
 
@@ -103,7 +105,7 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
 ```
 
-実機なしテストにはpytestとRuff、Pico Wへの転送にはmpremoteを使用します。
+実機なしテストにはpytestとRuff、Raspberry Pi Picoへの転送にはmpremoteを使用します。
 
 ### ビルド方法
 
@@ -115,7 +117,7 @@ MicroPythonソースに専用コンパイル工程はありません。ホスト
 
 ### Flash方法
 
-MicroPython本体はBOOTSELモードでUF2を書き込みます。次のアプリケーションファイルをPico Wへ転送します。
+MicroPython本体はBOOTSELモードでUF2を書き込みます。次のアプリケーションファイルをRaspberry Pi Picoへ転送します。
 
 ```text
 main.py
@@ -132,7 +134,7 @@ pwm_controller.py
 
 ### 起動方法
 
-Pico Wへ電源を投入するかソフトリセットすると、MicroPythonが`main.py`を自動実行します。USB REPLからのソフトリセットは`Ctrl+D`です。
+Raspberry Pi Picoへ電源を投入するかソフトリセットすると、MicroPythonが`main.py`を自動実行します。USB REPLからのソフトリセットは`Ctrl+D`です。
 
 ### CLIオプション
 
@@ -172,7 +174,7 @@ Pico Wへ電源を投入するかソフトリセットすると、MicroPythonが
 
 1. 対象版の仕様、設計、決定事項、テスト結果を確認します。
 2. 更新前のGit commit IDとFirmware Versionを記録します。
-3. 製品用ファイルをPico Wへ転送します。
+3. 製品用ファイルをRaspberry Pi Picoへ転送します。
 4. ソフトリセットまたは電源再投入を行います。
 5. LED通知とPWM出力の受入試験を実施し、結果を記録します。
 
@@ -187,7 +189,7 @@ Semantic Versioningの`X.Y.Z`を使用し、GitコミットはConventional Commi
 | バグ修正 | `fix:` | Patch |
 | 文書、テスト、設定、整理 | `docs:`、`test:`、`chore:`、`refactor:`、`style:` | Patch |
 
-現在のv0.2.0は基本機能と実機なし自動テストを追加した初期実装版です。基本機能の実機確認を完了した最初の正式版をv1.0.0とします。割り当て済みの仕様・設計・テストIDは文書更新時も再利用しません。
+v1.0.0は、基本機能、実機なし自動テスト、およびRaspberry Pi Picoでの基本動作確認を完了した最初の正式版です。割り当て済みの仕様・設計・テストIDは文書更新時も再利用しません。
 
 ### トラブルシューティング
 
